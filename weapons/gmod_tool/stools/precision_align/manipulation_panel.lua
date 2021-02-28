@@ -405,6 +405,21 @@ vgui.Register("PA_Displays_Tab", DISPLAYS_TAB, "DPanel")
 // Points Tab
 //********************************************************************************************************************//
 
+function SetPointNetworkFix(selection, vecIn)
+	net.Start( "PA_Relative_NetToServerLocalToWorld" )
+		net.WriteDouble(vecIn.x)
+		net.WriteDouble(vecIn.y)
+		net.WriteDouble(vecIn.z)
+	net.SendToServer()
+
+	net.Receive("PA_Relative_NetToClientLocalToWorld", function(len, ply) 
+		LTWx = net.ReadDouble()
+		LTWy = net.ReadDouble()
+		LTWz = net.ReadDouble()
+		vec = Vector(LTWx, LTWy, LTWz)		
+		PA_funcs.set_point( selection, vec )
+	end)
+end
 
 local POINTS_TAB = {}
 function POINTS_TAB:Init()
@@ -428,17 +443,18 @@ function POINTS_TAB:Init()
 			vec = point_temp.origin
 			if self.checkbox_relative1:GetChecked() then
 				if IsValid(PA_activeent) then
+
 					net.Start( "PA_Relative_NetToServerWorldToLocal" )
 						net.WriteDouble(vec.x)
 						net.WriteDouble(vec.y)
 						net.WriteDouble(vec.z)
 					net.SendToServer()
 					net.Receive("PA_Relative_NetToClientWorldToLocal", function(len, ply) 
-						relX = net.ReadDouble()
-						relY = net.ReadDouble()
-						relZ = net.ReadDouble()
+						WTLx = net.ReadDouble()
+						WTLy = net.ReadDouble()
+						WTLz = net.ReadDouble()
 						end)
-					vec = Vector(relX, relY, relZ)
+					vec = Vector(WTLx, WTLy, WTLz)
 				else
 					self.checkbox_relative1:SetValue(false)
 				end
@@ -477,31 +493,16 @@ function POINTS_TAB:Init()
 		self.button_set:SetFunction( function()
 			local selection = self.list_primarypoint:GetSelectedLine()
 			if selection then
-				local vec = self.sliders_origin1:GetValues()
-				
+				local vecIn = self.sliders_origin1:GetValues()
 				if self.checkbox_relative1:GetChecked() and IsValid(PA_activeent) then
-					--vec = PA_activeent:LocalToWorld(vec)
-					net.Start( "PA_Relative_NetToServerLocalToWorld" )
-						net.WriteDouble(vec.x)
-						net.WriteDouble(vec.y)
-						net.WriteDouble(vec.z)
-					net.SendToServer()
-					print("SentToServer"..vec.x..vec.y..vec.z)
-					net.Receive("PA_Relative_NetToClientLocalToWorld", function(len, ply) 
-						relX = net.ReadDouble()
-						relY = net.ReadDouble()
-						relZ = net.ReadDouble()
-						end)
-					print("LocalWorld"..relX..relY..relZ)
-					vec = Vector(relX, relY, relZ)
+					return SetPointNetworkFix(selection, vecIn)
 				end
-				
-				return PA_funcs.set_point( selection, vec )
+				return PA_funcs.set_point( selection, vecIn )
 			end
 			Warning("No selection")
 			return false
 		end )
-	
+
 	self.button_delete = vgui.Create( "PA_Function_Button", self )
 		self.button_delete:SetPos(140, 144)
 		self.button_delete:SetSize(80, 25)

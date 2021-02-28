@@ -124,6 +124,7 @@ end
 // Tool functions
 
 if SERVER then
+
 	function PAWorldToLocal(ent, ply)
 		net.Receive("PA_Relative_NetToServerWorldToLocal", function(len, ply) 
 			local X = net.ReadDouble()
