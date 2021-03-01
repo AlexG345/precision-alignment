@@ -125,7 +125,48 @@ end
 
 if SERVER then
 
-	function PAWorldToLocal(ent, ply)
+	function PAServerSideMath(ent, ply)
+		net.Receive("PA_Relative_Net", function(len, ply)
+			local X = net.ReadDouble()
+			local Y = net.ReadDouble()
+			local Z = net.ReadDouble()
+			local mathType = net.ReadDouble()
+			if mathType == 1 then 
+			--WorldToLocal--
+				local relativeVectorServer = ent:WorldToLocal(Vector(X,Y,Z))
+					net.Start("PA_Relative_Net")
+						net.WriteDouble(relativeVectorServer.x)
+						net.WriteDouble(relativeVectorServer.y)
+						net.WriteDouble(relativeVectorServer.z)
+					net.Send(ply)
+				end
+			if mathType == 2 then 
+			--LocalToWorld--
+				local relativeVectorServer = ent:LocalToWorld(Vector(X,Y,Z))
+					net.Start("PA_Relative_Net")
+						net.WriteDouble(relativeVectorServer.x)
+						net.WriteDouble(relativeVectorServer.y)
+						net.WriteDouble(relativeVectorServer.z)
+					net.Send(ply)
+				end
+			if mathType == 3 then 
+			--WorldToLocalAngles--
+				local relativeAngleServer = ent:WorldToLocalAngles(Angle(X, Y, Z))
+						net.Start("PA_Relative_Net")
+							net.WriteDouble(relativeAngleServer.x)
+							net.WriteDouble(relativeAngleServer.y)
+							net.WriteDouble(relativeAngleServer.z)
+						net.Send(ply)
+				end
+			if mathType == 4 then 
+			--LocalToWorldAngles--
+			end
+		end)
+	end
+
+
+--[[
+function PAWorldToLocal(ent, ply)
 		net.Receive("PA_Relative_NetToServerWorldToLocal", function(len, ply) 
 			local X = net.ReadDouble()
 			local Y = net.ReadDouble()
@@ -139,7 +180,7 @@ if SERVER then
 		end)
 	end
 
-	function PALocalToWorld(ent, ply)
+function PALocalToWorld(ent, ply)
 		net.Receive("PA_Relative_NetToServerLocalToWorld", function(len, ply) 
 			local X = net.ReadDouble()
 			local Y = net.ReadDouble()
@@ -151,7 +192,9 @@ if SERVER then
 				net.WriteDouble(relativeVectorServer.z)
 		net.Send(ply)
 		end)
-	end
+end
+]]
+
 	function TOOL:SendClickData( point, normal, ent )
 		net.Start( PA_ .. "click" )
 		
@@ -221,10 +264,11 @@ if SERVER then
 			ent:SetColor(highlight)
 			if A < 255 then ent:SetRenderMode( RENDERMODE_TRANSALPHA ) end
 			duplicator.StoreEntityModifier( ent, "colour", { Color = TrueColour } )
-			--store both numbers
-			PAWorldToLocal(ent, ply)
-			PALocalToWorld(ent, ply)
-
+			
+			PAServerSideMath(ent, ply)
+			--PAServerMath(ent, ply)
+			--PAWorldToLocal(ent, ply)
+			--PALocalToWorld(ent, ply)
 			self:SendEntityData( ent )
 			return true
 		else

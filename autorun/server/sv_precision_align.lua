@@ -7,13 +7,17 @@ local PA_ = PA .. "_"
 util.AddNetworkString( PA_ .. "constraint" )
 util.AddNetworkString( PA_ .. "click" )
 util.AddNetworkString( PA_ .. "ent" )
-util.AddNetworkString( "PA_Relative_NetToServerWorldToLocal")
-util.AddNetworkString( "PA_Relative_NetToClientWorldToLocal")
-util.AddNetworkString( "PA_Relative_NetToServerLocalToWorld")
-util.AddNetworkString( "PA_Relative_NetToClientLocalToWorld")
+util.AddNetworkString( "PA_Relative_Net")
+--util.AddNetworkString( "PA_Relative_NetToClient")
+--util.AddNetworkString( "PA_Relative_NetToServerWorldToLocal")
+--util.AddNetworkString( "PA_Relative_NetToClientWorldToLocal")
+--util.AddNetworkString( "PA_Relative_NetToServerLocalToWorld")
+--util.AddNetworkString( "PA_Relative_NetToClientLocalToWorld")
+
+
 
 	
-// Used to record each player's last PA action
+// Used to record each players last PA action
 local action_table = {}
 
 CreateConVar( PA_ .. "stack_delay", 0.01 )
@@ -56,7 +60,7 @@ list.Set( "PA_mirror_exceptions_specific", "models/props_phx/gibs/wooden_wheel2_
 list.Set( "PA_mirror_exceptions_specific", "models/props_phx/gibs/wooden_wheel2_gib2.mdl", Angle(0,180,0) )
 
 // Robotics
-// Most of these are (180,0,0) since it's easier to set the whole of robotics as (0,180,0) in exceptions 2
+// Most of these are (180,0,0) since its easier to set the whole of robotics as (0,180,0) in exceptions 2
 list.Set( "PA_mirror_exceptions_specific", "models/mechanics/robotics/foot.mdl", Angle(180,0,0) )
 list.Set( "PA_mirror_exceptions_specific", "models/mechanics/robotics/j1.mdl", Angle(180,0,0) )
 list.Set( "PA_mirror_exceptions_specific", "models/mechanics/robotics/j2.mdl", Angle(180,0,0) )

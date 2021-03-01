@@ -405,20 +405,57 @@ vgui.Register("PA_Displays_Tab", DISPLAYS_TAB, "DPanel")
 // Points Tab
 //********************************************************************************************************************//
 
-function SetPointNetworkFix(selection, vecIn)
-	net.Start( "PA_Relative_NetToServerLocalToWorld" )
-		net.WriteDouble(vecIn.x)
-		net.WriteDouble(vecIn.y)
-		net.WriteDouble(vecIn.z)
-	net.SendToServer()
-
-	net.Receive("PA_Relative_NetToClientLocalToWorld", function(len, ply) 
-		LTWx = net.ReadDouble()
-		LTWy = net.ReadDouble()
-		LTWz = net.ReadDouble()
-		vec = Vector(LTWx, LTWy, LTWz)		
-		PA_funcs.set_point( selection, vec )
-	end)
+function SetPointNetworkFix(selection, vecIn, mathType)
+	--I wanted this function to simplify everything, but it seems that if you use networking to set a value, it will just go with the default value instead of the networked since it takes time to arrive. So you gotta set it in the Recieve() section :(
+	if mathType == 1 then
+		--WorldToLocal--
+		net.Start( "PA_Relative_Net" )
+			net.WriteDouble(vecIn.x)
+			net.WriteDouble(vecIn.y)
+			net.WriteDouble(vecIn.z)
+			net.WriteDouble(mathType)
+		net.SendToServer()
+		net.Receive("PA_Relative_Net", function(len, ply) 
+			WTLx = net.ReadDouble()
+			WTLy = net.ReadDouble()
+			WTLz = net.ReadDouble()
+			vec = Vector(WTLx, WTLy, WTLz)	
+			selection:SetValues(vec) --This is wonky but similar in how it doesnt wait for a net response, so gotta set the value once it arrives. Whatever :/
+		end)
+	end
+	if mathType == 2 then
+		--LocalToWorld--
+		net.Start( "PA_Relative_Net" )
+			net.WriteDouble(vecIn.x)
+			net.WriteDouble(vecIn.y)
+			net.WriteDouble(vecIn.z)
+			net.WriteDouble(mathType)
+		net.SendToServer()
+		net.Receive("PA_Relative_Net", function(len, ply) 
+			LTWx = net.ReadDouble()
+			LTWy = net.ReadDouble()
+			LTWz = net.ReadDouble()
+			vec = Vector(LTWx, LTWy, LTWz)		
+			PA_funcs.set_point( selection, vec )
+			play_sound_true()
+		end)
+	end
+	if mathType == 3 then
+		--WorldToLocalAngles--
+		net.Start( "PA_Relative_Net" )
+			net.WriteDouble(vecIn.x)
+			net.WriteDouble(vecIn.y)
+			net.WriteDouble(vecIn.z)
+			net.WriteDouble(mathType)
+		net.SendToServer()
+		net.Receive("PA_Relative_Net", function(len, ply) 
+			WTLAx = net.ReadDouble()
+			WTLAy = net.ReadDouble()
+			WTLAz = net.ReadDouble()
+			ang = Angle(WTLAx, WTLAy, WTLAz)
+			selection:SetValues( Vector(ang.x, ang.y, ang.z) )
+		end)
+	end
 end
 
 local POINTS_TAB = {}
@@ -438,23 +475,12 @@ function POINTS_TAB:Init()
 		local vec
 		
 		if !point_temp then
-			vec = Vector(0,0,0)
+			vec = Vector(2,0,0)
 		else
 			vec = point_temp.origin
 			if self.checkbox_relative1:GetChecked() then
 				if IsValid(PA_activeent) then
-
-					net.Start( "PA_Relative_NetToServerWorldToLocal" )
-						net.WriteDouble(vec.x)
-						net.WriteDouble(vec.y)
-						net.WriteDouble(vec.z)
-					net.SendToServer()
-					net.Receive("PA_Relative_NetToClientWorldToLocal", function(len, ply) 
-						WTLx = net.ReadDouble()
-						WTLy = net.ReadDouble()
-						WTLz = net.ReadDouble()
-						end)
-					vec = Vector(WTLx, WTLy, WTLz)
+					SetPointNetworkFix(self.sliders_origin1, vec, 1)
 				else
 					self.checkbox_relative1:SetValue(false)
 				end
@@ -495,7 +521,7 @@ function POINTS_TAB:Init()
 			if selection then
 				local vecIn = self.sliders_origin1:GetValues()
 				if self.checkbox_relative1:GetChecked() and IsValid(PA_activeent) then
-					return SetPointNetworkFix(selection, vecIn)
+					return SetPointNetworkFix(selection, vecIn, 2)
 				end
 				return PA_funcs.set_point( selection, vecIn )
 			end
@@ -2366,8 +2392,9 @@ function ROTATION_TAB:Init()
 			elseif self.checkbox_relative1:GetChecked() then
 				self.checkbox_relative1.lastentity = PA_activeent
 				ang = self.sliders_angle1:GetValues()
-				ang = PA_activeent:WorldToLocalAngles( ToAngle(ang) )
-				self.sliders_angle1:SetValues( ToVector(ang) )
+				SetPointNetworkFix(self.sliders_angle1, ang, 3 )
+				--ang = PA_activeent:WorldToLocalAngles( ToAngle(ang) )
+				--self.sliders_angle1:SetValues( ToVector(ang) )
 			else
 				if !PA_activeent then
 					if self.checkbox_relative1.lastentity then
@@ -2405,7 +2432,7 @@ function ROTATION_TAB:Init()
 			local relative = 0
 			if self.checkbox_relative1:GetChecked() then
 				relative = 1
-				//ang = PA_activeent:LocalToWorldAngles( ang )
+				--ang = PA_activeent:LocalToWorldAngles( ang )
 			end
 			if !PA_funcs.rotate_entity(ang, vec, relative, PA_activeent) then return false end
 		end )
