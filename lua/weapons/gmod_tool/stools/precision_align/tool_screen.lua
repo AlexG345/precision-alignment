@@ -77,7 +77,7 @@ local function GetConstructNum()
 end
 
 
-// Taken from Garry's tool code
+// Taken from Garrys tool code
 local function DrawScrollingText( text, y, texwide )
 	local w, h = surface.GetTextSize( text  )
 	w = w + 64

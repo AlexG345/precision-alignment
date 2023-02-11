@@ -2,7 +2,7 @@
 
 if SERVER then return end
 
-local PA_VERSION = 5
+local PA_VERSION = 9
 	
 // Standard functions
 local PA = "precision_align"
@@ -104,18 +104,18 @@ function MANIPULATION_FRAME:Init()
 	self.rotation_functions_tab = vgui.Create( "PA_Rotation_Functions_Tab", self.body )
 	self.constraints_tab = vgui.Create( "PA_Constraints_Tab", self.body )
 
-	self.panel:AddSheet( "Display Options", self.displays_tab, "gui/silkicons/picture_edit", false, false )
-	self.panel:AddSheet( "Points", self.points_tab, "gui/silkicons/add", false, false )
+	self.panel:AddSheet( "Display Options", self.displays_tab, "icon16/picture_edit.png", false, false )
+	self.panel:AddSheet( "Points", self.points_tab, "icon16/add.png", false, false )
 		self.points_tab.tab = self.panel.Items[2].Tab
-	self.panel:AddSheet( "Lines", self.lines_tab, "gui/silkicons/check_on", false, false )
+	self.panel:AddSheet( "Lines", self.lines_tab, "icon16/tick.png", false, false )
 		self.lines_tab.tab = self.panel.Items[3].Tab
-	self.panel:AddSheet( "Planes", self.planes_tab, "gui/silkicons/world", false, false )
+	self.panel:AddSheet( "Planes", self.planes_tab, "icon16/world.png", false, false )
 		self.planes_tab.tab = self.panel.Items[4].Tab
-	self.panel:AddSheet( "Move Constructs", self.move_tab, "gui/silkicons/folder_go", false, false )
-	self.panel:AddSheet( "Functions", self.functions_tab, "gui/silkicons/plugin", false, false )
-	self.panel:AddSheet( "Rotation", self.rotation_tab, "gui/silkicons/arrow_refresh", false, false )
-	self.panel:AddSheet( "Rotation Functions", self.rotation_functions_tab, "gui/silkicons/arrow_refresh", false, false )
-	self.panel:AddSheet( "Constraints", self.constraints_tab, "gui/silkicons/anchor", false, false )
+	self.panel:AddSheet( "Move Constructs", self.move_tab, "icon16/folder_go.png", false, false )
+	self.panel:AddSheet( "Functions", self.functions_tab, "icon16/plugin.png", false, false )
+	self.panel:AddSheet( "Rotation", self.rotation_tab, "icon16/arrow_refresh.png", false, false )
+	self.panel:AddSheet( "Rotation Functions", self.rotation_functions_tab, "icon16/arrow_refresh.png", false, false )
+	self.panel:AddSheet( "Constraints", self.constraints_tab, "icon16/anchor.png", false, false )
 	
 	
 	// Help button
@@ -405,6 +405,58 @@ vgui.Register("PA_Displays_Tab", DISPLAYS_TAB, "DPanel")
 // Points Tab
 //********************************************************************************************************************//
 
+function SetPointNetworkFix(selection, vecIn, mathType)
+	--I wanted this function to simplify everything, but it seems that if you use networking to set a value, it will just go with the default value instead of the networked since it takes time to arrive. So you gotta set it in the Recieve() section :(
+	if mathType == 1 then
+		--WorldToLocal--
+		net.Start( "PA_Relative_Net" )
+			net.WriteDouble(vecIn.x)
+			net.WriteDouble(vecIn.y)
+			net.WriteDouble(vecIn.z)
+			net.WriteDouble(mathType)
+		net.SendToServer()
+		net.Receive("PA_Relative_Net", function(len, ply) 
+			WTLx = net.ReadDouble()
+			WTLy = net.ReadDouble()
+			WTLz = net.ReadDouble()
+			vec = Vector(WTLx, WTLy, WTLz)	
+			selection:SetValues(vec) --This is wonky but similar in how it doesnt wait for a net response, so gotta set the value once it arrives. Whatever :/
+		end)
+	end
+	if mathType == 2 then
+		--LocalToWorld--
+		net.Start( "PA_Relative_Net" )
+			net.WriteDouble(vecIn.x)
+			net.WriteDouble(vecIn.y)
+			net.WriteDouble(vecIn.z)
+			net.WriteDouble(mathType)
+		net.SendToServer()
+		net.Receive("PA_Relative_Net", function(len, ply) 
+			LTWx = net.ReadDouble()
+			LTWy = net.ReadDouble()
+			LTWz = net.ReadDouble()
+			vec = Vector(LTWx, LTWy, LTWz)		
+			PA_funcs.set_point( selection, vec )
+			play_sound_true()
+		end)
+	end
+	if mathType == 3 then
+		--WorldToLocalAngles--
+		net.Start( "PA_Relative_Net" )
+			net.WriteDouble(vecIn.x)
+			net.WriteDouble(vecIn.y)
+			net.WriteDouble(vecIn.z)
+			net.WriteDouble(mathType)
+		net.SendToServer()
+		net.Receive("PA_Relative_Net", function(len, ply) 
+			WTLAx = net.ReadDouble()
+			WTLAy = net.ReadDouble()
+			WTLAz = net.ReadDouble()
+			ang = Angle(WTLAx, WTLAy, WTLAz)
+			selection:SetValues( Vector(ang.x, ang.y, ang.z) )
+		end)
+	end
+end
 
 local POINTS_TAB = {}
 function POINTS_TAB:Init()
@@ -423,12 +475,12 @@ function POINTS_TAB:Init()
 		local vec
 		
 		if !point_temp then
-			vec = Vector(0,0,0)
+			vec = Vector(2,0,0)
 		else
 			vec = point_temp.origin
 			if self.checkbox_relative1:GetChecked() then
 				if IsValid(PA_activeent) then
-					vec = PA_activeent:WorldToLocal(vec)
+					SetPointNetworkFix(self.sliders_origin1, vec, 1)
 				else
 					self.checkbox_relative1:SetValue(false)
 				end
@@ -467,18 +519,16 @@ function POINTS_TAB:Init()
 		self.button_set:SetFunction( function()
 			local selection = self.list_primarypoint:GetSelectedLine()
 			if selection then
-				local vec = self.sliders_origin1:GetValues()
-				
+				local vecIn = self.sliders_origin1:GetValues()
 				if self.checkbox_relative1:GetChecked() and IsValid(PA_activeent) then
-					vec = PA_activeent:LocalToWorld(vec)
+					return SetPointNetworkFix(selection, vecIn, 2)
 				end
-				
-				return PA_funcs.set_point( selection, vec )
+				return PA_funcs.set_point( selection, vecIn )
 			end
 			Warning("No selection")
 			return false
 		end )
-	
+
 	self.button_delete = vgui.Create( "PA_Function_Button", self )
 		self.button_delete:SetPos(140, 144)
 		self.button_delete:SetSize(80, 25)
@@ -1492,7 +1542,7 @@ function MOVE_TAB:Init()
 		self.slider_rotate_axis.Label:SetWide( 30 )
 		self.slider_rotate_axis:SetMinMax( -180, 180 )
 	
-	// If no pivot, then the constructs won't move; only their directions will change
+	// If no pivot, then the constructs wont move; only their directions will change
 	local function rotate_constructs( selection_constructs, pivot, axis, degrees )
 		if pivot then
 			for k, v in pairs ( selection_constructs.points ) do
@@ -2342,8 +2392,9 @@ function ROTATION_TAB:Init()
 			elseif self.checkbox_relative1:GetChecked() then
 				self.checkbox_relative1.lastentity = PA_activeent
 				ang = self.sliders_angle1:GetValues()
-				ang = PA_activeent:WorldToLocalAngles( ToAngle(ang) )
-				self.sliders_angle1:SetValues( ToVector(ang) )
+				SetPointNetworkFix(self.sliders_angle1, ang, 3 )
+				--ang = PA_activeent:WorldToLocalAngles( ToAngle(ang) )
+				--self.sliders_angle1:SetValues( ToVector(ang) )
 			else
 				if !PA_activeent then
 					if self.checkbox_relative1.lastentity then
@@ -2381,7 +2432,7 @@ function ROTATION_TAB:Init()
 			local relative = 0
 			if self.checkbox_relative1:GetChecked() then
 				relative = 1
-				//ang = PA_activeent:LocalToWorldAngles( ang )
+				--ang = PA_activeent:LocalToWorldAngles( ang )
 			end
 			if !PA_funcs.rotate_entity(ang, vec, relative, PA_activeent) then return false end
 		end )
@@ -3408,7 +3459,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_xmin:SetPos(20, 170)
 		self.slider_xmin:SetWide(150)
 		self.slider_xmin:SetMinMax(-180, 180)
-		self.slider_xmin:SetDecimals(1)
 		self.slider_xmin:SetText( "X Min" )
 		self.slider_xmin:SetConVar( PA_ .. "ballsocket_adv_xmin" )
 	
@@ -3417,7 +3467,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_ymin:SetPos(20, 220)
 		self.slider_ymin:SetWide(150)
 		self.slider_ymin:SetMinMax(-180, 180)
-		self.slider_ymin:SetDecimals(1)
 		self.slider_ymin:SetText( "Y Min" )
 		self.slider_ymin:SetConVar( PA_ .. "ballsocket_adv_ymin" )
 	
@@ -3426,7 +3475,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_zmin:SetPos(20, 270)
 		self.slider_zmin:SetWide(150)
 		self.slider_zmin:SetMinMax(-180, 180)
-		self.slider_zmin:SetDecimals(1)
 		self.slider_zmin:SetText( "Z Min" )
 		self.slider_zmin:SetConVar( PA_ .. "ballsocket_adv_zmin" )
 	
@@ -3435,7 +3483,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_xmax:SetPos(190, 170)
 		self.slider_xmax:SetWide(150)
 		self.slider_xmax:SetMinMax(-180, 180)
-		self.slider_xmax:SetDecimals(1)
 		self.slider_xmax:SetText( "X Max" )
 		self.slider_xmax:SetConVar( PA_ .. "ballsocket_adv_xmax" )
 	
@@ -3444,7 +3491,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_ymax:SetPos(190, 220)
 		self.slider_ymax:SetWide(150)
 		self.slider_ymax:SetMinMax(-180, 180)
-		self.slider_ymax:SetDecimals(1)
 		self.slider_ymax:SetText( "Y Max" )
 		self.slider_ymax:SetConVar( PA_ .. "ballsocket_adv_ymax" )
 	
@@ -3453,7 +3499,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_zmax:SetPos(190, 270)
 		self.slider_zmax:SetWide(150)
 		self.slider_zmax:SetMinMax(-180, 180)
-		self.slider_zmax:SetDecimals(1)
 		self.slider_zmax:SetText( "Z Max" )
 		self.slider_zmax:SetConVar( PA_ .. "ballsocket_adv_zmax" )
 	
@@ -3462,7 +3507,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_xfric:SetPos(360, 170)
 		self.slider_xfric:SetWide(150)
 		self.slider_xfric:SetMinMax(-180, 180)
-		self.slider_xfric:SetDecimals(1)
 		self.slider_xfric:SetText( "X Friction" )
 		self.slider_xfric:SetConVar( PA_ .. "ballsocket_adv_xfric" )
 	
@@ -3471,7 +3515,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_yfric:SetPos(360, 220)
 		self.slider_yfric:SetWide(150)
 		self.slider_yfric:SetMinMax(-180, 180)
-		self.slider_yfric:SetDecimals(1)
 		self.slider_yfric:SetText( "Y Friction" )
 		self.slider_yfric:SetConVar( PA_ .. "ballsocket_adv_yfric" )
 	
@@ -3480,7 +3523,6 @@ function CONSTRAINTS_BALLSOCKET_ADV_TAB:Init()
 		self.slider_zfric:SetPos(360, 270)
 		self.slider_zfric:SetWide(150)
 		self.slider_zfric:SetMinMax(-180, 180)
-		self.slider_zfric:SetDecimals(1)
 		self.slider_zfric:SetText( "Z Friction" )
 		self.slider_zfric:SetConVar( PA_ .. "ballsocket_adv_zfric" )
 	

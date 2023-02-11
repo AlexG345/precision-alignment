@@ -124,17 +124,88 @@ end
 // Tool functions
 
 if SERVER then
+
+	function PAServerSideMath(ent, ply)
+		net.Receive("PA_Relative_Net", function(len, ply)
+			local X = net.ReadDouble()
+			local Y = net.ReadDouble()
+			local Z = net.ReadDouble()
+			local mathType = net.ReadDouble()
+			if mathType == 1 then 
+			--WorldToLocal--
+				local relativeVectorServer = ent:WorldToLocal(Vector(X,Y,Z))
+					net.Start("PA_Relative_Net")
+						net.WriteDouble(relativeVectorServer.x)
+						net.WriteDouble(relativeVectorServer.y)
+						net.WriteDouble(relativeVectorServer.z)
+					net.Send(ply)
+				end
+			if mathType == 2 then 
+			--LocalToWorld--
+				local relativeVectorServer = ent:LocalToWorld(Vector(X,Y,Z))
+					net.Start("PA_Relative_Net")
+						net.WriteDouble(relativeVectorServer.x)
+						net.WriteDouble(relativeVectorServer.y)
+						net.WriteDouble(relativeVectorServer.z)
+					net.Send(ply)
+				end
+			if mathType == 3 then 
+			--WorldToLocalAngles--
+				local relativeAngleServer = ent:WorldToLocalAngles(Angle(X, Y, Z))
+						net.Start("PA_Relative_Net")
+							net.WriteDouble(relativeAngleServer.x)
+							net.WriteDouble(relativeAngleServer.y)
+							net.WriteDouble(relativeAngleServer.z)
+						net.Send(ply)
+				end
+			if mathType == 4 then 
+			--LocalToWorldAngles--
+			end
+		end)
+	end
+
+
+--[[
+function PAWorldToLocal(ent, ply)
+		net.Receive("PA_Relative_NetToServerWorldToLocal", function(len, ply) 
+			local X = net.ReadDouble()
+			local Y = net.ReadDouble()
+			local Z = net.ReadDouble()
+			local relativeVectorServer = ent:WorldToLocal(Vector(X,Y,Z))
+			net.Start("PA_Relative_NetToClientWorldToLocal")
+				net.WriteDouble(relativeVectorServer.x)
+				net.WriteDouble(relativeVectorServer.y)
+				net.WriteDouble(relativeVectorServer.z)
+		net.Send(ply)
+		end)
+	end
+
+function PALocalToWorld(ent, ply)
+		net.Receive("PA_Relative_NetToServerLocalToWorld", function(len, ply) 
+			local X = net.ReadDouble()
+			local Y = net.ReadDouble()
+			local Z = net.ReadDouble()
+			local relativeVectorServer = ent:LocalToWorld(Vector(X,Y,Z))
+			net.Start("PA_Relative_NetToClientLocalToWorld")
+				net.WriteDouble(relativeVectorServer.x)
+				net.WriteDouble(relativeVectorServer.y)
+				net.WriteDouble(relativeVectorServer.z)
+		net.Send(ply)
+		end)
+end
+]]
+
 	function TOOL:SendClickData( point, normal, ent )
 		net.Start( PA_ .. "click" )
 		
-		// Send vectors using floats - was losing precision using just vectors
-		net.WriteFloat( point.x )
-		net.WriteFloat( point.y )
-		net.WriteFloat( point.z )
+		// Send vectors using doubles - was losing precision using just vectors floats sucked
+		net.WriteDouble( point.x )
+		net.WriteDouble( point.y )
+		net.WriteDouble( point.z )
 		
-		net.WriteFloat( normal.x )
-		net.WriteFloat( normal.y )
-		net.WriteFloat( normal.z )
+		net.WriteDouble( normal.x )
+		net.WriteDouble( normal.y )
+		net.WriteDouble( normal.z )
 		
 		net.WriteEntity( ent )
 		
@@ -194,6 +265,10 @@ if SERVER then
 			if A < 255 then ent:SetRenderMode( RENDERMODE_TRANSALPHA ) end
 			duplicator.StoreEntityModifier( ent, "colour", { Color = TrueColour } )
 			
+			PAServerSideMath(ent, ply)
+			--PAServerMath(ent, ply)
+			--PAWorldToLocal(ent, ply)
+			--PALocalToWorld(ent, ply)
 			self:SendEntityData( ent )
 			return true
 		else
@@ -269,6 +344,8 @@ function TOOL:GetClickPosition( trace )
 	// Mass Centre
 	elseif tooltype == 3 then
 		Pos = Ent:LocalToWorld(Phys:GetMassCenter())
+		
+		
 		
 	// BB Centre
 	elseif tooltype == 4 then

@@ -804,7 +804,6 @@ function CONSTRAINT_SLIDER:Init()
 	-- self:SetSize(130, 100) -- Keep the second number at 100
 	self.Label:SetSize( 100 )
 	self:SetMinMax( 0, 50000 )
-	self:SetDecimals( 2 )
 end
 
 // Base this off PA_XYZ_Slider so the keyboard hook functions apply
@@ -1695,8 +1694,8 @@ end
 
 // Called when the server sends click data - used to add a new point/line
 local function umsg_click_hook()
-	local point = Vector( net.ReadFloat(), net.ReadFloat(), net.ReadFloat() )
-	local normal = Vector( net.ReadFloat(), net.ReadFloat(), net.ReadFloat() )
+	local point = Vector( net.ReadDouble(), net.ReadDouble(), net.ReadDouble() )
+	local normal = Vector( net.ReadDouble(), net.ReadDouble(), net.ReadDouble() )
 	local ent = net.ReadEntity()
 	
 	local shift = LocalPlayer():KeyDown( IN_SPEED )
