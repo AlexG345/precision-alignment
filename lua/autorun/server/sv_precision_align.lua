@@ -868,12 +868,11 @@ function precision_align_constraint_func( len, ply )
 		if const then
 			controller.MyId = controller:EntIndex()
 			const.MyCrtl = controller:EntIndex()
-			controller:SetConstraint( const )
+			controller:SetConstraint( const, rope )
 			controller:DeleteOnRemove( const )
 		end
 		
 		if rope then
-			controller:SetRope( rope )
 			controller:DeleteOnRemove( rope )
 		end
 		
