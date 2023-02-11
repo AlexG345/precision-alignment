@@ -2,7 +2,7 @@
 
 if SERVER then return end
 
-local PA_VERSION = 9
+local PA_VERSION = 10
 	
 // Standard functions
 local PA = "precision_align"
