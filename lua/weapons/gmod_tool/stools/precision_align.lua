@@ -18,6 +18,7 @@ include( "weapons/gmod_tool/stools/"..PA.."/tool_screen.lua" )
 TOOL.ClientConVar =
 {
 	// Tool menu options
+	["displayhud"]			= "1",
 	["edge_snap"] 			= "1",
 	["centre_snap"] 		= "1",
 	["snap_distance"] 		= "100",

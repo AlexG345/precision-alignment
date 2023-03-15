@@ -1855,6 +1855,11 @@ end
 
 // HUD draw function	
 local function precision_align_draw( w, h)
+	-- Check if displayhud convar is enabled, if not we prevent any further execution
+	local displayHUD = GetConVar(string.format("%sdisplayhud",PA_)):GetBool()
+
+	if !displayHUD then return end
+
 	local playerpos = LocalPlayer():GetShootPos()
 	
 	// Points
@@ -2042,17 +2047,7 @@ local function precision_align_draw( w, h)
 end
 hook.Add("HUDPaint", "draw_precision_align", precision_align_draw)
 
-
-local function precision_align_displayhud_func( ply, cmd, args )
-	local enabled = tobool( args[1] )
-	if !enabled then
-		hook.Remove( "HUDPaint", "draw_precision_align" )
-	else 
-		hook.Add("HUDPaint", "draw_precision_align", precision_align_draw)
-	end
-	return true
-end
-concommand.Add( PA_.."displayhud", precision_align_displayhud_func )
+-- Removed hook for "displayhud" as this was conflicting with the convar, seemingly causing performance issues on some platforms.
 
 PA_manipulation_panel = vgui.Create( "PA_Manipulation_Frame" )
 PA_manipulation_panel:SetVisible(false)
