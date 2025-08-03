@@ -3112,6 +3112,8 @@ function CONSTRAINTS_TAB:Init()
 	self.ballsocket_tab = vgui.Create("PA_Constraints_Ballsocket_Tab", self.panel)
 	self.ballsocket_adv_tab = vgui.Create("PA_Constraints_Ballsocket_Adv_Tab", self.panel)
 	self.elastic_tab = vgui.Create("PA_Constraints_Elastic_Tab", self.panel)
+	self.winch_tab = vgui.Create("PA_Constraints_Winch_Tab", self.panel)
+	self.hydraulic_tab = vgui.Create("PA_Constraints_Hydraulic_Tab", self.panel)
 	self.rope_tab = vgui.Create("PA_Constraints_Rope_Tab", self.panel)
 	self.slider_tab = vgui.Create("PA_Constraints_Slider_Tab", self.panel)
 	self.wire_hydraulic_tab = vgui.Create("PA_Constraints_Wire_Hydraulic_Tab", self.panel)
@@ -3120,6 +3122,8 @@ function CONSTRAINTS_TAB:Init()
 	self.panel:AddSheet("Ball Socket", self.ballsocket_tab, false, false, false )
 	self.panel:AddSheet("Ball Socket Adv", self.ballsocket_adv_tab, false, false, false )
 	self.panel:AddSheet("Elastic", self.elastic_tab, false, false, false )
+	self.panel:AddSheet("Winch", self.winch_tab, false, false, false )
+	self.panel:AddSheet("Hydraulic", self.hydraulic_tab, false, false, false )
 	self.panel:AddSheet("Rope", self.rope_tab, false, false, false )
 	self.panel:AddSheet("Slider", self.slider_tab, false, false, false )
 	self.panel:AddSheet("Wire Hydraulic", self.wire_hydraulic_tab, false, false, false )
@@ -3621,6 +3625,171 @@ function CONSTRAINTS_ELASTIC_TAB:Init()
 end
 
 vgui.Register("PA_Constraints_Elastic_Tab", CONSTRAINTS_ELASTIC_TAB, "PA_Constraints_Sheet")
+
+
+local CONSTRAINTS_WINCH_TAB = {}
+function CONSTRAINTS_WINCH_TAB:Init()	
+	self:CopyBounds( self:GetParent() )
+	
+	self.Constraint = "Winch"
+	self.Description =	"Create a winch constraint between Pos 1 and Pos 2"
+
+	self.combobox = self:AddComboBox(
+		{
+			Label = "#Presets",
+			MenuButton = 1,
+			Folder = PA,
+			Options = {},
+			CVars =
+			{
+				[0] = PA_ .. "winch_fwd_speed",
+				[1] = PA_ .. "winch_bwd_speed",
+				[2] = PA_ .. "winch_fwd_bind",
+				[3] = PA_ .. "winch_bwd_bind",
+				[4] = PA_ .. "winch_material",
+				[5] = PA_ .. "winch_width"
+			}
+		}
+	)
+		self.combobox:SetPos( 25, 20 )
+		self.combobox:SetWide( 225 )
+	
+	self.binder_speed = vgui.Create( "CtrlNumPad", self )
+		self.binder_speed:SetWide( 225 )
+		self.binder_speed:SetPos( 25, 60 )
+		self.binder_speed.Label1:SetDark( false )
+		self.binder_speed.Label2:SetDark( false )
+		self.binder_speed:SetLabel1( "Make Longer" )
+		self.binder_speed:SetLabel2( "Make Shorter" )
+		self.binder_speed:SetConVar1( PA_ .. "winch_fwd_bind" )
+		self.binder_speed:SetConVar2( PA_ .. "winch_bwd_bind" )
+
+	self.slider_fwd_speed = vgui.Create( "PA_Constraint_Slider", self )
+		self.slider_fwd_speed.Label:SetSize( 75 )
+		self.slider_fwd_speed:SetWide( 225 )
+		self.slider_fwd_speed:SetPos( 25, 150 )
+		self.slider_fwd_speed:SetMax( 1000 )
+		self.slider_fwd_speed:SetText( "Longer Speed" )
+		self.slider_fwd_speed:SetConVar( PA_ .. "winch_fwd_speed" )
+	
+	self.slider_bwd_speed = vgui.Create( "PA_Constraint_Slider", self )
+		self.slider_bwd_speed.Label:SetSize( 75 )
+		self.slider_bwd_speed:SetWide( 225 )
+		self.slider_bwd_speed:SetPos( 25, 200 )
+		self.slider_bwd_speed:SetMax( 1000 )
+		self.slider_bwd_speed:SetText( "Shorter Speed" )
+		self.slider_bwd_speed:SetConVar( PA_ .. "winch_bwd_speed" )
+	
+	self.slider_width = vgui.Create( "PA_Constraint_Slider", self )
+		self.slider_width.Label:SetSize( 75 )
+		self.slider_width:SetWide( 225 )
+		self.slider_width:SetPos( 25, 250 )
+		self.slider_width:SetMax( 20 )
+		self.slider_width:SetText( "Width" )
+		self.slider_width:SetConVar( PA_ .. "winch_width" )
+
+	self.checkbox_toggle = vgui.Create( "DCheckBoxLabel", self )
+		self.checkbox_toggle:SetPos(50, 300)
+		self.checkbox_toggle:SetText( "Toggle" )
+		self.checkbox_toggle:SetSize(100,30)
+		self.checkbox_toggle:SetConVar( PA_ .. "winch_toggle" )
+	
+	self.matselect = vgui.Create( "RopeMaterial", self )
+		self.matselect:SetPos(250, 40)
+		self.matselect:SetWide(250)
+		self.matselect:SetConVar( PA_ .. "winch_material" )
+	
+	self.Constraint_Func = function()
+		return 0
+	end	
+end
+
+vgui.Register("PA_Constraints_Winch_Tab", CONSTRAINTS_WINCH_TAB, "PA_Constraints_Sheet")
+
+
+local CONSTRAINTS_HYDRAULIC_TAB = {}
+function CONSTRAINTS_HYDRAULIC_TAB:Init()	
+	self:CopyBounds( self:GetParent() )
+	
+	self.Constraint = "Hydraulic"
+	self.Description =	"Create a hydraulic constraint between Pos 1 and Pos 2"
+
+	self.combobox = self:AddComboBox(
+		{
+			Label = "#Presets",
+			MenuButton = 1,
+			Folder = PA,
+			Options = {},
+			CVars =
+			{
+				[0] = PA_ .. "hydraulic_addlength",
+                [1] = PA_ .. "hydraulic_speed",
+				[2] = PA_ .. "hydraulic_bind",
+                [3] = PA_ .. "hydraulic_toggle",
+                [4] = PA_ .. "hydraulic_fixed",
+				[5] = PA_ .. "hydraulic_material",
+				[6] = PA_ .. "hydraulic_width"
+			}
+		}
+
+	)
+		self.combobox:SetPos( 25, 20 )
+		self.combobox:SetWide( 225 )
+	
+	self.binder_speed = vgui.Create( "CtrlNumPad", self )
+		self.binder_speed:SetWide( 225 )
+		self.binder_speed:SetPos( 25, 60 )
+		self.binder_speed.Label1:SetDark( false )
+		self.binder_speed:SetLabel1( "Toggle key" )
+		self.binder_speed:SetConVar1( PA_ .. "hydraulic_bind" )
+
+	self.slider_addlength = vgui.Create( "PA_Constraint_Slider", self )
+		self.slider_addlength.Label:SetSize( 75 )
+		self.slider_addlength:SetWide( 225 )
+		self.slider_addlength:SetPos( 25, 150 )
+		self.slider_addlength:SetMax( 1000 )
+		self.slider_addlength:SetText( "Distance" )
+		self.slider_addlength:SetConVar( PA_ .. "hydraulic_addlength" )
+	
+	self.slider_speed = vgui.Create( "PA_Constraint_Slider", self )
+		self.slider_speed.Label:SetSize( 75 )
+		self.slider_speed:SetWide( 225 )
+		self.slider_speed:SetPos( 25, 200 )
+		self.slider_speed:SetMax( 1000 )
+		self.slider_speed:SetText( "Speed" )
+		self.slider_speed:SetConVar( PA_ .. "hydraulic_speed" )
+	
+	self.slider_width = vgui.Create( "PA_Constraint_Slider", self )
+		self.slider_width.Label:SetSize( 75 )
+		self.slider_width:SetWide( 225 )
+		self.slider_width:SetPos( 25, 250 )
+		self.slider_width:SetMax( 20 )
+		self.slider_width:SetText( "Width" )
+		self.slider_width:SetConVar( PA_ .. "hydraulic_width" )
+
+	self.checkbox_fixed = vgui.Create( "DCheckBoxLabel", self )
+		self.checkbox_fixed:SetPos(50, 300)
+		self.checkbox_fixed:SetText( "Fixed" )
+		self.checkbox_fixed:SetSize(100,30)
+		self.checkbox_fixed:SetConVar( PA_ .. "hydraulic_fixed" )
+
+	self.checkbox_toggle = vgui.Create( "DCheckBoxLabel", self )
+		self.checkbox_toggle:SetPos(50, 328)
+		self.checkbox_toggle:SetText( "Toggle" )
+		self.checkbox_toggle:SetSize(100,30)
+		self.checkbox_toggle:SetConVar( PA_ .. "hydraulic_toggle" )
+	
+	self.matselect = vgui.Create( "RopeMaterial", self )
+		self.matselect:SetPos(250, 40)
+		self.matselect:SetWide(250)
+		self.matselect:SetConVar( PA_ .. "hydraulic_material" )
+	
+	self.Constraint_Func = function()
+		return 0
+	end	
+end
+
+vgui.Register("PA_Constraints_Hydraulic_Tab", CONSTRAINTS_HYDRAULIC_TAB, "PA_Constraints_Sheet")
 
 
 local CONSTRAINTS_ROPE_TAB = {}

@@ -78,6 +78,22 @@ TOOL.ClientConVar =
 	["elastic_width"]		= "1",
 	["elastic_stretchonly"]	= "0",
 	
+	["winch_fwd_speed"]		= "64",
+	["winch_bwd_speed"]		= "64",
+	["winch_fwd_bind"]		= "44",
+	["winch_bwd_bind"]		= "41",
+	["winch_toggle"]		= "0",
+	["winch_material"]		= "cable/rope",
+	["winch_width"]			= "1",
+
+	["hydraulic_addlength"]	= "100",
+	["hydraulic_speed"]		= "64",
+	["hydraulic_bind"]		= "44",
+	["hydraulic_toggle"]	= "1",
+	["hydraulic_fixed"]		= "1",
+	["hydraulic_material"]	= "cable/rope",
+	["hydraulic_width"]		= "1",
+
 	["rope_forcelimit"]		= "0",
 	["rope_addlength"]		= "0",
 	["rope_width"]			= "1",

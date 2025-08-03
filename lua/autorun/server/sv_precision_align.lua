@@ -793,13 +793,14 @@ function precision_align_constraint_func( len, ply )
 		end
 		
 		const = constraint.Axis( Ent1, Ent2, 0, 0, LPos1, LPos2, forcelimit, torquelimit, friction, nocollide, axis )
+
 	elseif constraint_type == "Ballsocket" then
 		local forcelimit = ply:GetInfoNum( PA_.. "ballsocket_forcelimit", 0 )
 		local torquelimit = ply:GetInfoNum( PA_.. "ballsocket_torquelimit", 0 )
 		local nocollide = ply:GetInfoNum( PA_.. "ballsocket_nocollide", 0 )
 		
 		const = constraint.Ballsocket( Ent2, Ent1, 0, 0, LPos1, forcelimit, torquelimit, nocollide )
-		
+	
 	elseif constraint_type == "Ballsocket Advanced" then
 		local forcelimit = ply:GetInfoNum( PA_.. "ballsocket_adv_forcelimit", 0 )
 		local torquelimit = ply:GetInfoNum( PA_.. "ballsocket_adv_torquelimit", 0 )
@@ -826,7 +827,31 @@ function precision_align_constraint_func( len, ply )
 		local stretchonly = ply:GetInfoNum( PA_.. "elastic_stretchonly", 0 )
 		
 		const = constraint.Elastic( Ent1, Ent2, 0, 0, LPos1, LPos2, constant, damping, rdamping, material, width, stretchonly )
-		
+	
+	elseif constraint_type == "Winch" then
+		local fwd_speed = ply:GetInfoNum( PA_.. "winch_fwd_speed", 0 )
+		local bwd_speed = ply:GetInfoNum( PA_.. "winch_bwd_speed", 0 )
+		local fwd_bind = ply:GetInfoNum( PA_.. "winch_fwd_bind", 0 )
+		local bwd_bind = ply:GetInfoNum( PA_.. "winch_bwd_bind", 0 )
+		local toggle = ply:GetInfoNum( PA_.. "winch_toggle", 0 )
+		local material = ply:GetInfo( PA_.. "winch_material", "cable/rope" )
+		local width = ply:GetInfoNum( PA_.. "winch_width", 1 )
+
+		const = constraint.Winch( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, width, fwd_bind, bwd_bind, fwd_speed, bwd_speed, material, toggle )
+	
+	elseif constraint_type == "Hydraulic" then
+		local addLength = ply:GetInfoNum( PA_.. "hydraulic_addlength", 100 )
+		local speed = ply:GetInfoNum( PA_.. "hydraulic_speed", 50 )
+		local bind = ply:GetInfoNum( PA_.. "hydraulic_bind", 0 )
+		local toggle = ply:GetInfoNum( PA_.. "hydraulic_toggle", 0 )
+		local fixed = ply:GetInfoNum( PA_.. "hydraulic_fixed", 0 )
+		local material = ply:GetInfo( PA_.. "hydraulic_material", "cable/rope" )
+		local width = ply:GetInfoNum( PA_.. "hydraulic_width", 1 )
+		local lengthMin = ( WPos1 - WPos2 ):Length()
+		local lengthMax = lengthMin + addLength
+
+		const = constraint.Hydraulic( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, lengthMin, lengthMax, width, bind, fixed, speed, material, toggle )
+	
 	elseif constraint_type == "Rope" then
 		local forcelimit = ply:GetInfoNum( PA_.. "rope_forcelimit", 0 )
 		local width = ply:GetInfoNum( PA_.. "rope_width", 1 )
@@ -841,7 +866,7 @@ function precision_align_constraint_func( len, ply )
 		end
 		
 		const = constraint.Rope( Ent1, Ent2, 0, 0, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
-		
+	
 	elseif constraint_type == "Slider" then
 		local width = ply:GetInfoNum( PA_.. "slider_width", 0 )
 		
