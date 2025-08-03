@@ -777,6 +777,8 @@ function precision_align_constraint_func( len, ply )
 	
 	local LPos1 = Vector( data.LPos1.x, data.LPos1.y, data.LPos1.z )
 	local LPos2 = Vector( data.LPos2.x, data.LPos2.y, data.LPos2.z )
+	local WPos1 = Ent1:LocalToWorld( LPos1 )
+	local WPos2 = Ent1:LocalToWorld( LPos2 )
 	local vars = data.vars
 	
 	local const
@@ -789,7 +791,7 @@ function precision_align_constraint_func( len, ply )
 		
 		local axis
 		if vars and vars ~= 0 then
-			axis = Ent1:WorldToLocal( Ent1:LocalToWorld(LPos1) + Vector( vars.x, vars.y, vars.z ) )
+			axis = Ent1:WorldToLocal( WPos1 + Vector( vars.x, vars.y, vars.z ) )
 		end
 		
 		const = constraint.Axis( Ent1, Ent2, 0, 0, LPos1, LPos2, forcelimit, torquelimit, friction, nocollide, axis )
@@ -833,7 +835,7 @@ function precision_align_constraint_func( len, ply )
 		local bwd_speed = ply:GetInfoNum( PA_.. "winch_bwd_speed", 0 )
 		local fwd_bind = ply:GetInfoNum( PA_.. "winch_fwd_bind", 0 )
 		local bwd_bind = ply:GetInfoNum( PA_.. "winch_bwd_bind", 0 )
-		local toggle = ply:GetInfoNum( PA_.. "winch_toggle", 0 )
+		local toggle = ply:GetInfoNum( PA_.. "winch_toggle", 0 ) != 0
 		local material = ply:GetInfo( PA_.. "winch_material", "cable/rope" )
 		local width = ply:GetInfoNum( PA_.. "winch_width", 1 )
 
@@ -843,8 +845,8 @@ function precision_align_constraint_func( len, ply )
 		local addLength = ply:GetInfoNum( PA_.. "hydraulic_addlength", 100 )
 		local speed = ply:GetInfoNum( PA_.. "hydraulic_speed", 50 )
 		local bind = ply:GetInfoNum( PA_.. "hydraulic_bind", 0 )
-		local toggle = ply:GetInfoNum( PA_.. "hydraulic_toggle", 0 )
-		local fixed = ply:GetInfoNum( PA_.. "hydraulic_fixed", 0 )
+		local toggle = ply:GetInfoNum( PA_.. "hydraulic_toggle", 0 ) != 0
+		local fixed = ply:GetInfoNum( PA_.. "hydraulic_fixed", 0 ) != 0
 		local material = ply:GetInfo( PA_.. "hydraulic_material", "cable/rope" )
 		local width = ply:GetInfoNum( PA_.. "hydraulic_width", 1 )
 		local lengthMin = ( WPos1 - WPos2 ):Length()
@@ -862,7 +864,7 @@ function precision_align_constraint_func( len, ply )
 		local addlength = 0
 		if length <= 0 then
 			addlength = ply:GetInfoNum( PA_.. "rope_addlength", 0 )
-			length = ( Ent1:LocalToWorld(LPos1) - Ent2:LocalToWorld(LPos2) ):Length()
+			length = ( WPos1 - WPos2 ):Length()
 		end
 		
 		const = constraint.Rope( Ent1, Ent2, 0, 0, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
