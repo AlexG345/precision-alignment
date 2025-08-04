@@ -1,8 +1,9 @@
 # Precision Alignment Tool
-Originally written by Wenli, previously maintained by TweaK.
 
-Adapted calculations from client-sided to server-sided by Summer
+## Contributors (Chronological Order)
 
-I (giinuu) will be looking to maintain this project more regularly going forwards.
-
-I've forked off the most recent version that is available on github that was forked from the original.
+- Wenli – Original author  
+- [TweaK – Old maintainer, most used version on Steam GMod's Workshop](https://github.com/IJWTB/precision-alignment)
+- [SMSum – Adapted calculations from client-sided to server-sided](https://github.com/SMSum/precision-alignment)
+- [giinuu - Recent maintainer](https://github.com/giinuu/precision-alignment)
+- AlexG345
