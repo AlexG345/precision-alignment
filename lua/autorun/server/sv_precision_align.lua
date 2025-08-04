@@ -778,10 +778,11 @@ function precision_align_constraint_func( len, ply )
 	local LPos1 = Vector( data.LPos1.x, data.LPos1.y, data.LPos1.z )
 	local LPos2 = Vector( data.LPos2.x, data.LPos2.y, data.LPos2.z )
 	local WPos1 = Ent1:LocalToWorld( LPos1 )
-	local WPos2 = Ent1:LocalToWorld( LPos2 )
+	local WPos2 = Ent2:LocalToWorld( LPos2 )
 	local vars = data.vars
 	
-	local const
+	local const, rope, controller, slider, axis
+	local constType = "ropeconstraints"
 	
 	if constraint_type == "Axis" then
 		local forcelimit = ply:GetInfoNum( PA_.. "axis_forcelimit", 0 )
@@ -795,6 +796,19 @@ function precision_align_constraint_func( len, ply )
 		end
 		
 		const = constraint.Axis( Ent1, Ent2, 0, 0, LPos1, LPos2, forcelimit, torquelimit, friction, nocollide, axis )
+
+	elseif constraint_type == "Motor" then
+
+		local forcetime = ply:GetInfoNum( PA_.. "motor_forcetime", 0 )
+		local forcelimit = ply:GetInfoNum( PA_.. "motor_forcelimit", 0 )
+		local friction = ply:GetInfoNum( PA_.. "motor_friction", 0 )
+		local nocollide = ply:GetInfoNum( PA_.. "motor_nocollide", 0 )
+		local torque = ply:GetInfoNum( PA_.. "motor_torque", 0 )
+		local fwd_bind = ply:GetInfoNum( PA_.. "motor_fwd_bind", 0 )
+		local bwd_bind = ply:GetInfoNum( PA_.. "motor_bwd_bind", 0 )
+		local toggle = ply:GetInfoNum( PA_.. "motor_toggle", 0 )
+
+		const, axis = constraint.Motor( Ent1, Ent2, 0, 0, LPos1, LPos2, friction, torque, forcetime, nocollide, toggle, ply, forcelimit, fwd_bind, bwd_bind, 1 )
 
 	elseif constraint_type == "Ballsocket" then
 		local forcelimit = ply:GetInfoNum( PA_.. "ballsocket_forcelimit", 0 )
@@ -828,7 +842,7 @@ function precision_align_constraint_func( len, ply )
 		local width = ply:GetInfoNum( PA_.. "elastic_width", 1 )
 		local stretchonly = ply:GetInfoNum( PA_.. "elastic_stretchonly", 0 )
 		
-		const = constraint.Elastic( Ent1, Ent2, 0, 0, LPos1, LPos2, constant, damping, rdamping, material, width, stretchonly )
+		const, rope = constraint.Elastic( Ent1, Ent2, 0, 0, LPos1, LPos2, constant, damping, rdamping, material, width, stretchonly )
 	
 	elseif constraint_type == "Winch" then
 		local fwd_speed = ply:GetInfoNum( PA_.. "winch_fwd_speed", 0 )
@@ -839,7 +853,7 @@ function precision_align_constraint_func( len, ply )
 		local material = ply:GetInfo( PA_.. "winch_material", "cable/rope" )
 		local width = ply:GetInfoNum( PA_.. "winch_width", 1 )
 
-		const = constraint.Winch( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, width, fwd_bind, bwd_bind, fwd_speed, bwd_speed, material, toggle )
+		const, rope, controller = constraint.Winch( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, width, fwd_bind, bwd_bind, fwd_speed, bwd_speed, material, toggle )
 	
 	elseif constraint_type == "Hydraulic" then
 		local addLength = ply:GetInfoNum( PA_.. "hydraulic_addlength", 100 )
@@ -852,8 +866,21 @@ function precision_align_constraint_func( len, ply )
 		local lengthMin = ( WPos1 - WPos2 ):Length()
 		local lengthMax = lengthMin + addLength
 
-		const = constraint.Hydraulic( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, lengthMin, lengthMax, width, bind, fixed, speed, material, toggle )
+		const, rope, controller, slider = constraint.Hydraulic( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, lengthMin, lengthMax, width, bind, fixed, speed, material, toggle )
 	
+    elseif constraint_type == "Muscle" then
+		local amplitude = ply:GetInfoNum( PA_.. "muscle_amplitude", 100 )
+		local frequency = ply:GetInfoNum( PA_.. "muscle_frequency", 2 )
+		local bind = ply:GetInfoNum( PA_.. "muscle_bind", 0 )
+		local starton = ply:GetInfoNum( PA_.. "muscle_starton", 0 ) != 0
+		local fixed = ply:GetInfoNum( PA_.. "muscle_fixed", 0 ) != 0
+		local material = ply:GetInfo( PA_.. "muscle_material", "cable/rope" )
+		local width = ply:GetInfoNum( PA_.. "muscle_width", 1 )
+		local lengthMin = ( WPos1 - WPos2 ):Length()
+		local lengthMax = lengthMin + amplitude
+
+		const, rope, controller, slider = constraint.Muscle( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, lengthMin, lengthMax, width, bind, fixed, frequency, amplitude, starton, material )
+
 	elseif constraint_type == "Rope" then
 		local forcelimit = ply:GetInfoNum( PA_.. "rope_forcelimit", 0 )
 		local width = ply:GetInfoNum( PA_.. "rope_width", 1 )
@@ -867,12 +894,12 @@ function precision_align_constraint_func( len, ply )
 			length = ( WPos1 - WPos2 ):Length()
 		end
 		
-		const = constraint.Rope( Ent1, Ent2, 0, 0, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
+		const, rope = constraint.Rope( Ent1, Ent2, 0, 0, LPos1, LPos2, length, addlength, forcelimit, width, material, rigid )
 	
 	elseif constraint_type == "Slider" then
 		local width = ply:GetInfoNum( PA_.. "slider_width", 0 )
 		
-		const = constraint.Slider( Ent1, Ent2, 0, 0, LPos1, LPos2, width )
+		const, rope = constraint.Slider( Ent1, Ent2, 0, 0, LPos1, LPos2, width )
 	
 	elseif constraint_type == "Wire Hydraulic" then
 		local controller = Entity( vars )
@@ -889,7 +916,6 @@ function precision_align_constraint_func( len, ply )
 		local oldconstraint = controller.constraint
 		local oldrope = controller.rope
 		
-		local rope
 		const, rope = MakeWireHydraulic( ply, Ent1, Ent2, 0, 0, LPos1, LPos2, width, material, 0, nil )
 		
 		if const then
@@ -919,10 +945,25 @@ function precision_align_constraint_func( len, ply )
 	end
 	
 	if const then
+
+		local constType = rope and "ropeconstraints" or "constraints"
+		if !ply:CheckLimit( constType ) then return false end
+
 		undo.Create( "PA_" .. constraint_type )
 			undo.AddEntity( const )
+			if IsValid( rope ) then undo.AddEntity( rope ) end
+			if IsValid( controller ) then undo.AddEntity( controller ) end
+			if IsValid( axis ) then undo.AddEntity( axis ) end
+			if IsValid( slider ) then undo.AddEntity( slider ) end
 			undo.SetPlayer( ply )
 		undo.Finish()
+
+		ply:AddCount( constType, const ) 
+		ply:AddCleanup( constType, const )
+		if IsValid( rope ) then ply:AddCleanup( constType, rope ) end
+		if IsValid( controller ) then ply:AddCleanup( constType, controller ) end
+		if IsValid( axis ) then ply:AddCleanup( constType, axis ) end
+		if IsValid( slider ) then ply:AddCleanup( constType, slider ) end
 		
 		if Ent1 then
 			Ent1:GetPhysicsObject():EnableMotion( false )

@@ -165,7 +165,7 @@ function CONSTRUCT_LISTVIEW:Text( title, text )
 	
 	// Format header
 	local Header = self.Columns[1].Header
-	Header:SetFont("DefaultBold")
+	Header:SetFont("DermaDefaultBold")
 	Header:SetContentAlignment( 5 )
 end
 

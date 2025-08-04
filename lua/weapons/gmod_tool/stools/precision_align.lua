@@ -53,6 +53,15 @@ TOOL.ClientConVar =
 	["axis_friction"]		= "0",
 	["axis_nocollide"]		= "0",
 	
+    ["motor_forcetime"]     = "0",
+    ["motor_forcelimit"]	= "0",
+    ["motor_friction"]		= "0",
+    ["motor_nocollide"]		= "0",
+	["motor_torque"]		= "500",
+	["motor_fwd_bind"]		= "44",
+	["motor_bwd_bind"]		= "41",
+	["motor_toggle"]		= "0",
+
 	["ballsocket_forcelimit"]	= "0",
 	["ballsocket_torquelimit"]	= "0",
 	["ballsocket_nocollide"]	= "0",
@@ -93,6 +102,14 @@ TOOL.ClientConVar =
 	["hydraulic_fixed"]		= "1",
 	["hydraulic_material"]	= "cable/rope",
 	["hydraulic_width"]		= "1",
+
+	["muscle_amplitude"]	= "100",
+	["muscle_frequency"]	= "1",
+	["muscle_bind"]         = "44",
+	["muscle_starton"]      = "0",
+	["muscle_fixed"]		= "1",
+	["muscle_material"]     = "cable/rope",
+	["muscle_width"]		= "1",
 
 	["rope_forcelimit"]		= "0",
 	["rope_addlength"]		= "0",
