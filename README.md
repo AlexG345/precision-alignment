@@ -1,6 +1,6 @@
 # Precision Alignment Tool
 
-## Contributors (Chronological Order)
+### Contributors (Chronological Order)
 
 - Wenli – Original author  
 - [TweaK – Old maintainer, most used version on Steam GMod's Workshop](https://github.com/IJWTB/precision-alignment)
